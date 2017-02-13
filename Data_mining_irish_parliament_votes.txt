@@ -1,0 +1,35 @@
+library(arules)
+
+data<-load("F:\\SDM\\Assignments\\dailvotes(1).Rdata") 
+colnames(votes) <- c("First_name","Last_name","Party",paste("Vote",1:23,sep=""))
+dat<-votes[,-(1:3)]
+datnew <- 1*(dat=="y")
+colnames(datnew) <- paste("Yes",1:23,sep="")
+votes_trans <- as(datnew,"transactions")
+inspect(votes_trans)
+
+#inspect items which frequently occur in the transactions
+itemFrequencyPlot(votes_trans,topN=23,type="absolute")
+
+fit<-apriori(votes_trans,parameter=list(support=0.8,confidence=0.8))
+fit<-sort(fit,by="support")
+inspect(fit)
+
+datnew_n <- 1*(dat!="y")
+colnames(datnew_n) <- paste("No",1:23,sep="")
+novotes_trans <- as(datnew_n,"transactions")
+inspect(novotes_trans)
+
+
+allvotes<-merge(votes_trans,novotes_trans)
+
+fit<-apriori(allvotes,parameter=list(support=0.8,confidence=0.8))
+fit<-sort(fit,by="support")
+inspect(fit)
+
+a<-interestMeasure(fit, "chisquare", transactions = votes_trans, reuse = TRUE)
+a<-data.frame(a)
+quality(fit)<-cbind(quality(fit), chisquare=a$a)
+inspect(head(fit, 10))
+
+
